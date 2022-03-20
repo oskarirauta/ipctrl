@@ -28,13 +28,13 @@ JSON_LIBS:=-ljsoncpp
 OBJS:=$(SHARED_OBJS) $(STDCAPTURE_OBJS) $(LOGREADER_OBJS) $(NFT_OBJS)
 
 EXAMPLE_OBJS:= \
-	$(OBJDIR)/logreader_main.o \
+	$(OBJDIR)/syslog_main.o \
 	$(OBJDIR)/stdcapture_main.o \
 	$(OBJDIR)/nft_main.o
 
 EXAMPLES:= \
 	$(BINDIR)/stdcapture \
-	$(BINDIR)/logreader \
+	$(BINDIR)/syslog \
 	$(BINDIR)/nftset
 
 export TOPDIR

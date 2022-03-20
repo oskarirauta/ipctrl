@@ -1,14 +1,13 @@
-TOPDIR?=..
-CXX?=g++
-CXXFLAGS?=--std=c++17
+ifndef TOPDIR
+  export TOPDIR = $(shell dirname $(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
+  include $(TOPDIR)/Makefile.inc
+endif
+
+include $(TOPDIR)/Makefile.deps
 
 all: $(LOGREADER_OBJS)
 
-$(OBJDIR)/logreader_utils.o: logreader_utils.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(OBJDIR)/logreader_syslog.o: syslog.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
+$(foreach f, $(LOGREADER_OBJS), $(eval $(call compile,$(f))))
 
 clean:
 	rm -f $(LOGREADER_OBJS)

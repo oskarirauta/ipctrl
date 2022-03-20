@@ -1,0 +1,26 @@
+stdcapture_deps := $(STDCAPTURE_OBJS) $(OBJDIR)/stdcapture_main.o
+stdcapture_libs :=
+
+syslog_deps := $(COMMON_OBJS) $(ENVIRON_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/syslog_main.o
+syslog_libs :=
+
+nftset_deps := $(COMMON_OBJS) $(STDCAPTURE_OBJS) $(NFT_OBJS) $(OBJDIR)/nftset_main.o
+nftset_libs := -lnftables -lmnl -lnftnl -ljansson -ljsoncpp
+
+export stdcapture_deps stdcapture_libs syslog_deps syslog_libs nftset_deps nftset_libs
+
+define compile
+$(1): $(notdir $(basename $(1))).cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $(1) $(notdir $(basename $(1))).cpp;
+endef
+
+define link
+$(1): $($(patsubst %_main,%,$(notdir $(basename $(1))))_deps)
+ifeq ($(2),)
+$(1): $($(notdir $(basename $(1)))_deps)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS)  $($(notdir $(basename $(1)))_deps) $(LIBS) $($(notdir $(basename $(1)))_libs) -o $(1);
+else
+$(1): $($(patsubst %$(2),%,$(notdir $(basename $(1))))_deps)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS)  $($(notdir $(basename $(1)))_deps) $(LIBS) $($(patsubst %$(2),%,$(notdir $(basename $(1))))_libs) -o $(1);
+endif
+endef

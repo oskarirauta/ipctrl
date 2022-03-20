@@ -1,10 +1,20 @@
-TOPDIR:=$(shell pwd)
 OBJDIR:=$(TOPDIR)/objs
 BINDIR:=$(TOPDIR)/bin
 
-SHARED_OBJS:= \
-	$(OBJDIR)/common.o \
-	$(OBJDIR)/environ.o
+CXX?=g++
+CXXFLAGS?=--std=c++17
+SUBDIRS:=shared logreader stdcapture nft
+INCLUDES:=-I$(TOPDIR)/include $(addsuffix /include,$(addprefix -I$(TOPDIR)/,$(SUBDIRS)))
+LIBS:=
+
+export OBJDIR BINDIR \
+	CXX CXXFLAGS \
+	SUBDIRS INCLUDES \
+	LIBS
+
+COMMON_OBJS:= $(OBJDIR)/common.o
+
+ENVIRON_OBJS:= $(OBJDIR)/environ.o
 
 STDCAPTURE_OBJS:= \
 	$(OBJDIR)/stdcapture.o
@@ -21,31 +31,17 @@ NFT_OBJS:= \
 	$(OBJDIR)/nft_query.o \
 	$(OBJDIR)/nft_set.o
 
-NFT_LIBS:=-lnftables -lmnl -lnftnl -ljansson
-
-JSON_LIBS:=-ljsoncpp
-
-OBJS:=$(SHARED_OBJS) $(STDCAPTURE_OBJS) $(LOGREADER_OBJS) $(NFT_OBJS)
-
 EXAMPLE_OBJS:= \
 	$(OBJDIR)/syslog_main.o \
 	$(OBJDIR)/stdcapture_main.o \
-	$(OBJDIR)/nft_main.o
+	$(OBJDIR)/nftset_main.o
 
 EXAMPLES:= \
 	$(BINDIR)/stdcapture \
 	$(BINDIR)/syslog \
 	$(BINDIR)/nftset
 
-export TOPDIR
-export OBJDIR
-export BINDIR
-export SHARED_OBJS
-export LOGREADER_OBJS
-export STDCAPTURE_OBJS
-export NFT_OBJS
-export NFT_LIBS
-export JSON_LIBS
-export OBJS
-export EXAMPLE_OBJS
-export EXAMPLES
+OBJS:=$(SHARED_OBJS) $(STDCAPTURE_OBJS) $(LOGREADER_OBJS) $(NFT_OBJS)
+
+export COMMON_OBJS ENVIRON_OBJS STDCAPTURE_OBJS LOGREADER_OBJS \
+	NFT_OBJS EXAMPLE_OBJS EXAMPLES OBJS

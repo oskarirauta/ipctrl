@@ -1,26 +1,14 @@
-TOPDIR?=..
-CXX?=g++
-CXXFLAGS?=--std=c++17
+ifndef TOPDIR
+  export TOPDIR = $(shell dirname $(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
+  include $(TOPDIR)/Makefile.inc
+endif
 
-all: $(EXAMPLES)
+include $(TOPDIR)/Makefile.deps
 
-$(OBJDIR)/stdcapture_main.o: stdcapture_main.cpp
-	 $(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
+all: $(EXAMPLE_OBJS) $(EXAMPLES)
 
-$(OBJDIR)/syslog_main.o: syslog_main.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(OBJDIR)/nft_main.o: nft_main.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(BINDIR)/stdcapture: $(STDCAPTURE_OBJS) $(OBJDIR)/stdcapture_main.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@;
-
-$(BINDIR)/syslog: $(SHARED_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/syslog_main.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LIBS) -o $@;
-
-$(BINDIR)/nftset: $(SHARED_OBJS) $(STDCAPTURE_OBJS) $(NFT_OBJS) $(OBJDIR)/nft_main.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LIBS) $(NFT_LIBS) $(JSON_LIBS) -o $@;
+$(foreach f, $(EXAMPLE_OBJS), $(eval $(call compile,$(f))))
+$(foreach f, $(EXAMPLES), $(eval $(call link,$(f),_main)))
 
 clean:
 	rm -f $(EXAMPLE_OBJS) $(EXAMPLES)

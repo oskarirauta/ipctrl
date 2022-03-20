@@ -1,26 +1,13 @@
-TOPDIR?=..
-CXX?=g++
-CXXFLAGS?=--std=c++17
+ifndef TOPDIR
+  export TOPDIR = $(shell dirname $(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
+  include $(TOPDIR)/Makefile.inc
+endif
+
+include $(TOPDIR)/Makefile.deps
 
 all: $(NFT_OBJS)
 
-$(OBJDIR)/nft.o: nft.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(OBJDIR)/nft_element.o: nft_element.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(OBJDIR)/nft_exec.o: nft_exec.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(OBJDIR)/nft_family.o: nft_family.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(OBJDIR)/nft_query.o: nft_query.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
-
-$(OBJDIR)/nft_set.o: nft_set.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
+$(foreach f, $(NFT_OBJS), $(eval $(call compile,$(f))))
 
 clean:
 	rm -f $(NFT_OBJS)

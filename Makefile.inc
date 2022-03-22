@@ -21,7 +21,8 @@ STDCAPTURE_OBJS:= \
 
 LOGREADER_OBJS:= \
 	$(OBJDIR)/logreader_utils.o \
-	$(OBJDIR)/logreader_syslog.o
+	$(OBJDIR)/logreader_syslog.o \
+	$(OBJDIR)/logreader_file.o
 
 NFT_OBJS:= \
 	$(OBJDIR)/nft.o \
@@ -32,13 +33,15 @@ NFT_OBJS:= \
 	$(OBJDIR)/nft_set.o
 
 EXAMPLE_OBJS:= \
-	$(OBJDIR)/syslog_main.o \
 	$(OBJDIR)/stdcapture_main.o \
+	$(OBJDIR)/syslog_main.o \
+	$(OBJDIR)/logfile_main.o \
 	$(OBJDIR)/nftset_main.o
 
 EXAMPLES:= \
 	$(BINDIR)/stdcapture \
 	$(BINDIR)/syslog \
+	$(BINDIR)/logfile \
 	$(BINDIR)/nftset
 
 OBJS:=$(SHARED_OBJS) $(STDCAPTURE_OBJS) $(LOGREADER_OBJS) $(NFT_OBJS)

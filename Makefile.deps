@@ -4,10 +4,13 @@ stdcapture_libs :=
 syslog_deps := $(COMMON_OBJS) $(ENVIRON_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/syslog_main.o
 syslog_libs :=
 
+logfile_deps := $(COMMON_OBJS) $(ENVIRON_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/logfile_main.o
+logfile_libs :=
+
 nftset_deps := $(COMMON_OBJS) $(STDCAPTURE_OBJS) $(NFT_OBJS) $(OBJDIR)/nftset_main.o
 nftset_libs := -lnftables -lmnl -lnftnl -ljansson -ljsoncpp
 
-export stdcapture_deps stdcapture_libs syslog_deps syslog_libs nftset_deps nftset_libs
+export stdcapture_deps stdcapture_libs syslog_deps syslog_libs logfile_deps logfile_libs nftset_deps nftset_libs
 
 define compile
 $(1): $(notdir $(basename $(1))).cpp

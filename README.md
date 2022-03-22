@@ -45,7 +45,7 @@ Early WIP - nothing except testing so far is available for some parts
 
  - nft-set handling: functional, but not yet final
  - syslog tailing: functional, but not yet final
- - log file tailing: not started yet
+ - log file tailing: function, but not yet final + testing
  - log parser/matcher: not started yet
  - uci configuration support and model: not started yet
  - ubus support: not started yet

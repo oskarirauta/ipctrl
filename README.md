@@ -39,13 +39,20 @@ it only changes elements on sets. Why? Because it's more ideal this way for fw4.
 to firewall config, script part must be added - script checks if ipctrl is enabled and restarts/starts it along-side with fw4.
 This way restarting fw4 is supported by ipctrl.
 
+### Log sources
+
+ - file
+ - logread: forks a exec process to logread -f and pipes it's output
+ - syslog: uses openwrt standard syslog via ubus
+
 ### Status
 
 Early WIP - nothing except testing so far is available for some parts
 
  - nft-set handling: functional, but not yet final
+ - file tailing: finished
+ - logread tailing: functional but not yet final
  - syslog tailing: functional, but not yet final
- - log file tailing: function, but not yet final + testing
  - log parser/matcher: not started yet
  - uci configuration support and model: not started yet
  - ubus support: not started yet

@@ -5,9 +5,9 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-#include "logreader/syslog.hpp"
+#include "logreader/logread.hpp"
 
-logreader::syslog syslog;
+logreader::logread syslog;
 // to test singleton forcing:
 //logreader::syslog syslog2;
 

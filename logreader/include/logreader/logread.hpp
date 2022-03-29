@@ -14,12 +14,12 @@
 
 namespace logreader {
 
-	class syslog : public logreader::base_class {
+	class logread : public logreader::base_class {
 
 		public:
 
 			const inline std::string name(void) {
-				return "@syslog";
+				return "@logread";
 			}
 
 			const inline int delay(void) {
@@ -74,7 +74,7 @@ namespace logreader {
 
 			void panic(void);
 
-			syslog();
+			logread();
 
 		private:
 

@@ -10,9 +10,9 @@
 #include "common.hpp"
 #include "environ.hpp"
 #include "logreader/utils.hpp"
-#include "logreader/syslog.hpp"
+#include "logreader/logread.hpp"
 
-const bool logreader::syslog::tail(void) {
+const bool logreader::logread::tail(void) {
 
 	this -> mutex.lock();
 
@@ -140,16 +140,16 @@ const bool logreader::syslog::tail(void) {
 	return true;
 }
 
-static void syslog_signal_handler(int n) {
+static void logread_signal_handler(int n) {
 
 	// TODO:
 	// this should be displayed ONLY when debugging is enabled, but we do not have
 	// such option yet
-	std::cout << "signal handler received exception [logreader::syslog]: " << n << std::endl;
+	std::cout << "signal handler received exception [logreader::logread]: " << n << std::endl;
 	wait(NULL);
 }
 
-bool logreader::syslog::spawn_child(void) {
+bool logreader::logread::spawn_child(void) {
 
 	this -> mutex.lock();
 
@@ -180,7 +180,7 @@ bool logreader::syslog::spawn_child(void) {
 	} else if ( ch_pid > 0 ) { // fork succeeded
 
 		struct sigaction v;
-		v.sa_handler = syslog_signal_handler;
+		v.sa_handler = logread_signal_handler;
 		v.sa_flags = SA_NOCLDWAIT;
 		sigemptyset(&v.sa_mask);
 		sigaction(17, &v, NULL);
@@ -219,7 +219,7 @@ bool logreader::syslog::spawn_child(void) {
 	return false;
 }
 
-void logreader::syslog::panic(void) {
+void logreader::logread::panic(void) {
 
 	// TODO:
 	// try locking several times for some time, for example- 5ms
@@ -236,15 +236,15 @@ void logreader::syslog::panic(void) {
 		kill(ch_pid, SIGKILL);
 }
 
-// logread::syslog must be a singleton only
-static bool syslog_initialized = false;
+// logread::logreader must be a singleton only
+static bool logread_initialized = false;
 
-logreader::syslog::syslog(void) {
+logreader::logread::logread(void) {
 
-	if ( syslog_initialized )
-		throw std::runtime_error("logreader::syslog is singleton. Only one is allowed.");
+	if ( logread_initialized )
+		throw std::runtime_error("logreader::logread is singleton. Only one instance is allowed.");
 
-	syslog_initialized = true;
+	logread_initialized = true;
 
 	// if ipctrl was killed with SIGKILL(9), fork propably left to live, so
 	// identify and kill them

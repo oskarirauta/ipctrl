@@ -53,7 +53,8 @@ static const int get_last_ln_pos(std::ifstream &fd, std::string fn, std::string 
 	// unnecessary check, we just did check that file is open.. but harmless, so..
 
 	if ( !fd.is_open()) {
-		logger::error << "file " << fn << " is not open (get_last_ln_pos)" << std::endl;
+		logger::error << "file " << fn << " is not open (" <<
+			sender << ( sender.empty() ? "" : ":" ) << "get_last_ln_pos)" << std::endl;
 		return -1;
 	}
 
@@ -94,7 +95,7 @@ const bool logreader::file::tail(void) {
 		if ( !file_exists(this -> _name)) {
 
 			this -> _did_reset = true;
-			logger::verbose << "file " << this -> _name << " cannot be opened - file does not exist" << std::endl;
+			logger::verbose << "file " << this -> _name << " cannot be opened because it does not exist" << std::endl;
 			return false;
 		}
 
@@ -103,7 +104,7 @@ const bool logreader::file::tail(void) {
 		this -> fd.open(this -> _name, std::ifstream::in);
 
 		if (( this -> fd.rdstate() & ( std::ifstream::failbit | std::ifstream::badbit )) || !this -> fd.is_open()) {
-			logger::debug << "file " << this -> _name << " open failed" << std::endl;
+			logger::error << "file " << this -> _name << " open failed" << std::endl;
 			return false;
 		}
 
@@ -131,7 +132,7 @@ const bool logreader::file::tail(void) {
 
 	if ( !file_exists(this -> _name)) {
 
-		logger::vverbose << "warning, file " << this -> _name << " was removed un-expectedly" << std::endl;
+		logger::vverbose << "file " << this -> _name << " disappeared  un-expectedly, removed from filesystem maybe?" << std::endl;
 		this -> fd.close();
 		return false;
 	}
@@ -141,7 +142,7 @@ const bool logreader::file::tail(void) {
 		return false;
 	} else if ( new_size < this -> _fsize ) { // file had shrunken, reset
 
-		logger::error << "file " << this -> _name << " was shrunken, resetting tailing" << std::endl;
+		logger::verbose << "file " << this -> _name << " was shrunken, resetting tailing" << std::endl;
 
 		this -> fd.close();
 		this -> _did_reset = true;
@@ -205,5 +206,4 @@ const bool logreader::file::tail(void) {
 	}
 
 	return true;
-
 }

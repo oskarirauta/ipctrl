@@ -114,6 +114,7 @@ namespace logreader {
 			std::ifstream fd;
 			int _fpos = 0;
 			int _fsize = 0;
+			bool _did_reset = false;
 
 			int _delay = 50;
 			bool _running = false;

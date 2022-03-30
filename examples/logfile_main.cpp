@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+#include "logger.hpp"
 #include "logreader/file.hpp"
 
 static bool exists(std::string name) {
@@ -20,43 +21,49 @@ static bool exists(std::string name) {
 
 static void usage(std::string name, bool verbose) {
 
-	std::cout << "\nusage:" << ( verbose ? " " : "\n\t" ) << name.substr(name.find_last_of("/\\") + 1) <<
+	std::cout << "\nusage: " << name.substr(name.find_last_of("/\\") + 1) <<
 		( verbose ? " [options] filename\n" : " filename\n" ) << std::endl;
 
 	if ( !verbose ) return;
 
 	std::cout << "options:" << std::endl;
 
-	std::cout << "\t--help | --h | -h: display help" << std::endl;
+	std::cout << "\t--help  | --h | -h: display help" << std::endl;
+	std::cout << "\t--debug | --d | -d: enable debug output" << std::endl;
 	std::cout << std::endl;
 }
 
 int main(int argc, char *argv[]) {
 
-	std::string app_name(argv[0]);
+	std::string filename, app_name(argv[0]);
+	bool verbose, debug;
 
-	if ( argc < 2 ) {
-		usage(app_name, false);
-		return 0;
-	} else if ( argc >= 2 ) {
-
-		bool verbose = false;
-		for ( int i = 1; i < argc; i++ ) {
-			std::string arg(argv[i]);
-			if ( arg == "-h" || arg == "--h" || arg == "--help" || arg == "-help" ) verbose = true;
-		}
-
-		if ( verbose || argc > 2 ) {
-			usage(app_name, verbose);
-			return argc > 2 ? -1 : 0;
-		}
+	for ( int i = 1; i < argc; i++ ) {
+		std::string arg(argv[i]);
+		if ( arg == "-h" || arg == "--h" || arg == "--help" || arg == "-help" ) verbose = true;
+		else if ( arg == "-d" || arg == "--d" || arg == "--debug" || arg == "-debug" ) debug = true;
+		else filename = arg;
 	}
 
-	const std::string filename(argv[1]);
+	if ( verbose || argc < 2 || filename.empty()) {
 
-	if ( !exists(filename)) {
-		std::cout << "error: file " << filename << " does not exist or is not readable" << std::endl;
+		usage(app_name, verbose);
+		return 0;
+	} else if ( !exists(filename)) {
+
+		std::cout << "\nerror: file " << filename << " does not exist or is not readable." << std::endl;
+		usage(app_name, verbose);
 		return -1;
+	}
+
+	if ( debug ) {
+
+		logger::output_level[logger::verbose] = true;
+		logger::output_level[logger::vverbose] = true;
+		logger::output_level[logger::debug] = true;
+
+		logger::debug << "debug output enabled." << std::endl;
+		std::cout << std::endl;
 	}
 
 	logreader::file logfile(filename);
@@ -67,6 +74,14 @@ int main(int argc, char *argv[]) {
 	while ( !logfile.aborted()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		logfile.tail();
+
+		logfile.mutex.lock();
+		while ( !logfile.entries.empty()) {
+			std::cout << logfile.entries.front() << std::endl;
+			logfile.entries.pop_front();
+		}
+		logfile.mutex.unlock();
+
 	}
 
 	return 0;

@@ -33,6 +33,14 @@ static void usage(std::string name, bool verbose) {
 	std::cout << std::endl;
 }
 
+// function if we don't want to do it with lambda..
+/*
+void handle_entry(std::string name, std::string txt) {
+
+	std::cout << txt << std::endl;
+}
+*/
+
 int main(int argc, char *argv[]) {
 
 	std::string filename, app_name(argv[0]);
@@ -75,12 +83,8 @@ int main(int argc, char *argv[]) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		logfile.tail();
 
-		logfile.mutex.lock();
-		while ( !logfile.entries.empty()) {
-			std::cout << logfile.entries.front() << std::endl;
-			logfile.entries.pop_front();
-		}
-		logfile.mutex.unlock();
+		//logfile.iterate(handle_entry);
+		logfile.iterate([](auto name, auto txt) { std::cout << txt << std::endl; });
 
 	}
 

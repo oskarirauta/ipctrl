@@ -23,6 +23,7 @@ STDCAPTURE_OBJS:= \
 
 LOGREADER_OBJS:= \
 	$(OBJDIR)/logreader_utils.o \
+	$(OBJDIR)/logreader_base.o \
 	$(OBJDIR)/logreader_syslog.o \
 	$(OBJDIR)/logreader_logread.o \
 	$(OBJDIR)/logreader_file.o

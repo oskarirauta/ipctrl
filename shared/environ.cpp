@@ -1,3 +1,4 @@
+#include <vector>
 #include "common.hpp"
 #include "environ.hpp"
 

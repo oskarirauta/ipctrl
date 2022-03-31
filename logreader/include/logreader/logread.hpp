@@ -1,16 +1,12 @@
 #pragma once
 
+#include <string>
 #include <thread>
+#include <mutex>
 #include <cstdio>
+#include <list>
 
 #include "logreader/base_class.hpp"
-
-#include <iostream>
-
-#include <list>
-#include <string>
-#include <mutex>
-#include <thread>
 
 namespace logreader {
 

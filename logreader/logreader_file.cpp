@@ -88,6 +88,17 @@ const bool logreader::file::tail(void) {
 
 	std::lock_guard<std::mutex> lock(this -> mutex);
 
+	if ( this -> _aborted ) {
+
+		if ( this -> fd.is_open()) {
+
+			logger::verbose << "closing file " << this -> _name << " and ending tailing" << std::endl;
+			this -> fd.close();
+		}
+
+		return false;
+	}
+
 	if ( !this -> fd.is_open()) {
 
 		if ( !file_exists(this -> _name)) {

@@ -51,12 +51,12 @@ namespace logreader {
 
 			const inline bool running(void) {
 				std::lock_guard<std::mutex> lock(this -> mutex);
-				return this -> _running;
+				return this -> fd.is_open();
 			}
 
 			const inline bool exiting(void) {
 				std::lock_guard<std::mutex> lock(this -> mutex);
-				return this -> _exiting;
+				return this -> _aborted && this -> fd.is_open();
 			}
 
 			const inline bool aborted(void) {
@@ -90,16 +90,21 @@ namespace logreader {
 
 			inline void panic(void) {
 
-				// TODO:
-				// try locking several times for some time, for example- 5ms
+				bool locked = false;
 
-				bool locked = this -> mutex.try_lock(); // Do not force mutex, this is panic
+				for ( int i = 0; i < 10 && !locked; i++ ) { // attempto to lock several times
+
+					locked = this -> mutex.try_lock(); // but we don't force, this is panic after all..
+					if ( i != 0 && !locked )
+						std::this_thread::sleep_for(std::chrono::milliseconds(4);
+				}
+
 				this -> _aborted = true;
 				this -> entries.clear();
 				this -> fd.close();
 
 				if ( locked ) // unlock if mutex lock was possible
-				this -> mutex.unlock();
+					this -> mutex.unlock();
 			}
 
 			file(std::string filename)  : _name(filename) {}

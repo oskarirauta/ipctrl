@@ -238,6 +238,7 @@ void logreader::logread::panic(void) {
 	bool locked = false;
 
 	for ( int i = 0; i < 10 && !locked; i++ ) { // attempt locking several times if needed
+
 		locked = this -> mutex.try_lock(); // but we don't force, this is panic after all..
 		if ( i != 0 && !locked )
 			std::this_thread::sleep_for(std::chrono::milliseconds(4));

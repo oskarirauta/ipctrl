@@ -3,5 +3,10 @@
 #include <string>
 #include <vector>
 
-const std::string shell_env(void);
-void  new_environ(const char *ch_env[], std::vector<std::string> &valuepairs);
+namespace env {
+
+	const std::string get(void);
+	void add(std::string &new_env, std::string name, std::string value);
+	int new_size(std::string new_env);
+	void mk_env(const char *ch_env[], std::string new_env);
+}

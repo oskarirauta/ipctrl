@@ -28,5 +28,15 @@ namespace logreader {
 			virtual void panic(void) = 0;
 
 			void iterate(logreader_handler_t handler);
+
+			const bool stopped(void) {
+
+				bool r = this -> running();
+				bool e = this -> exiting();
+				bool a = this -> aborted();
+
+				return a & !r && !e;
+			}
+
 	};
 }

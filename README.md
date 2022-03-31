@@ -51,7 +51,7 @@ Early WIP - nothing except testing so far is available for some parts
 
  - nft-set handling: functional, but not yet final
  - file tailing: finished
- - logread tailing: functional but not yet final
+ - logread tailing: finished
  - syslog tailing: functional, but not yet final
  - log parser/matcher: not started yet
  - uci configuration support and model: not started yet

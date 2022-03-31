@@ -77,7 +77,7 @@ namespace logreader {
 
 			inline bool reset(void) {
 				std::lock_guard<std::mutex> lock(this -> mutex);
-				if ( this -> fd.isopen() || !this -> _aborted )
+				if ( this -> fd.is_open() || !this -> _aborted )
 					return false;
 
 				this -> _aborted = false;
@@ -92,7 +92,7 @@ namespace logreader {
 
 					locked = this -> mutex.try_lock(); // but we don't force, this is panic after all..
 					if ( i != 0 && !locked )
-						std::this_thread::sleep_for(std::chrono::milliseconds(4);
+						std::this_thread::sleep_for(std::chrono::milliseconds(4));
 				}
 
 				this -> _aborted = true;

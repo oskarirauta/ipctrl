@@ -55,8 +55,7 @@ namespace logreader {
 			}
 
 			const inline bool exiting(void) {
-				std::lock_guard<std::mutex> lock(this -> mutex);
-				return this -> _aborted && this -> fd.is_open();
+				return false;
 			}
 
 			const inline bool aborted(void) {
@@ -78,12 +77,9 @@ namespace logreader {
 
 			inline bool reset(void) {
 				std::lock_guard<std::mutex> lock(this -> mutex);
-				if ( this -> _running || this -> _exiting )
+				if ( this -> fd.isopen() || !this -> _aborted )
 					return false;
 
-				this -> fd.close();
-				this -> _running = false;
-				this -> _exiting = false;
 				this -> _aborted = false;
 				return true;
 			}
@@ -118,8 +114,6 @@ namespace logreader {
 			bool _did_reset = false;
 
 			int _delay = 50;
-			bool _running = false;
-			bool _exiting = false;
 			bool _aborted = false;
 
 	};

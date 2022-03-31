@@ -9,6 +9,7 @@
 
 #include "common.hpp"
 #include "environ.hpp"
+#include "logger.hpp"
 #include "logreader/utils.hpp"
 #include "logreader/logread.hpp"
 
@@ -22,15 +23,21 @@ const bool logreader::logread::tail(void) {
 
 			if ( this -> _pid > 0 && kill(this -> _pid, 0) == 0 ) {
 
+				logger::verbose << "logread process is running with pid " << this -> _pid << ", stopping it now" << std::endl;
+
 				if ( kill(this -> _pid, 0) == 0 ) {
 
 					// forked process is still running though it should not
 					// be, so kill it
 
 					kill(this -> _pid, SIGKILL);
+
+					logger::vverbose << "logread process is running with pid " << this -> _pid << ", issued SIGKILL to end it" << std::endl;
 				}
 
 				if ( this -> _pid > 0 || this -> _running || this -> _exiting || entries.size() > 0) {
+
+					logger::debug << "logread has been stopped" << std::endl;
 
 					this -> _pid = 0;
 					this -> _running = false;
@@ -48,8 +55,13 @@ const bool logreader::logread::tail(void) {
 		if ( this -> _exiting ) // should never happen
 			return true;
 
-		if ( !this -> spawn_child()) // forking a child failed
+		if ( !this -> spawn_child()) { // forking a child failed
+
+			logger::debug << "attempt to spawn a child process to run logread has failed" << std::endl;
 			return false;
+		}
+
+		logger::vverbose << "spawned a child process running logread in a separate process with pid " << this -> _pid << std::endl;
 
 		this -> mutex.lock();
 		this -> _running = true;
@@ -64,6 +76,8 @@ const bool logreader::logread::tail(void) {
 
 		if ( tailing ) {
 
+			logger::vverbose << "stopping logread tailing" << std::endl;
+
 			int status;
 			kill(this -> _pid, SIGKILL);
 			waitpid(this -> _pid, &status, 0);
@@ -71,6 +85,8 @@ const bool logreader::logread::tail(void) {
 		}
 
 		if ( !tailing ) {
+
+			logger::vverbose << "logread tailing has stopped" << std::endl;
 
 			this -> _running = false;
 			this -> _exiting = false;
@@ -80,6 +96,8 @@ const bool logreader::logread::tail(void) {
 			return true;
 		}
 
+		logger::debug << "logread process stopping failed, spawned child did not end execution" << std::endl;
+
 		// failed to kill child process
 		this -> _running = true;
 		this -> _exiting = true;
@@ -88,10 +106,16 @@ const bool logreader::logread::tail(void) {
 
 	} else if ( !tailing && !this -> _aborted ) { // forked process has died unexpectedly
 
+		logger::vverbose << "child process died unexpectedly, spawning another" << std::endl;
+
 		fclose(this -> _output); // close old pipe
+
+		this -> _pid = 0;
 		this -> mutex.unlock();
 
 		if ( !this -> spawn_child()) { // spawn new one - or fail
+
+			logger::debug << "spawning a child process failed" << std::endl;
 
 			this -> mutex.lock();
 			this -> _pid = 0;
@@ -102,6 +126,7 @@ const bool logreader::logread::tail(void) {
 		}
 
 		// we have spawned a new child process
+		logger::vverbose << "new child process spawned succesfully with pid " << this -> _pid << std::endl;
 
 		this -> mutex.lock();
 		this -> _exiting = false;
@@ -110,6 +135,8 @@ const bool logreader::logread::tail(void) {
 		return true;
 
 	} else if ( this -> _aborted ) { // abortion has been requested
+
+		logger::info << "logread tailing has been requested to stop tailing" << std::endl;
 
 		this -> _exiting = true;
 		this -> mutex.unlock();
@@ -142,10 +169,7 @@ const bool logreader::logread::tail(void) {
 
 static void logread_signal_handler(int n) {
 
-	// TODO:
-	// this should be displayed ONLY when debugging is enabled, but we do not have
-	// such option yet
-	std::cout << "signal handler received exception [logreader::logread]: " << n << std::endl;
+	logger::debug << "signal handler received exception [logreader::logread]: " << n << std::endl;
 	wait(NULL);
 }
 
@@ -172,9 +196,7 @@ bool logreader::logread::spawn_child(void) {
 
 	if ( ch_pid == -1 ) {
 
-		// TODO:
-		// while debugging only
-		std::cout << "fork failed" << std::endl;
+		logger::debug << "spawn_child: fork failed" << std::endl;
 		return false;
 
 	} else if ( ch_pid > 0 ) { // fork succeeded
@@ -191,21 +213,14 @@ bool logreader::logread::spawn_child(void) {
 		this -> _pid = ch_pid;
 		this -> mutex.unlock();
 
-		// TODO:
-		// while debugging only
-		std::cout << "spawn success" << std::endl;
 		return true;
 
 	} else {
 
-		// TODO:
-		// shell env altering should be moved to it's own file
-
-		std::string env = shell_env();
-		std::vector<std::string> valuepairs = common::split(env, '\n');
-		valuepairs.push_back("CHILD_OF=ipctrl");
-		const char *ch_env[valuepairs.size() + 1];
-		new_environ(ch_env, valuepairs);
+		std::string shell_env = env::get();
+		env::add(shell_env, "CHILD_OF", "ipctrl");
+		const char *ch_env[env::new_size(shell_env)];
+		env::mk_env(ch_env, shell_env);
 
 		close(this -> pipefd[0]);
 		dup2(this -> pipefd[1], STDOUT_FILENO);
@@ -221,10 +236,14 @@ bool logreader::logread::spawn_child(void) {
 
 void logreader::logread::panic(void) {
 
-	// TODO:
-	// try locking several times for some time, for example- 5ms
+	bool locked = false;
 
-	bool locked = this -> mutex.try_lock(); // Do not force mutex, this is panic
+	for ( int i = 0; i < 10 && !locked; i++ ) { // attempt locking several times if needed
+		locked = this -> mutex.try_lock(); // but we don't force, this is panic after all..
+		if ( i != 0 && !locked )
+			std::this_thread::sleep_for(std::chrono::milliseconds(4));
+	}
+
 	pid_t ch_pid = this -> _pid;
 	this -> _aborted = true;
 	this -> entries.clear();
@@ -248,8 +267,15 @@ logreader::logread::logread(void) {
 
 	// if ipctrl was killed with SIGKILL(9), fork propably left to live, so
 	// identify and kill them
+
 	std::list<int> old_childs;
-	if ( logreader::find_processes(old_childs, "logread", "CHILD_OF=ipctrl"))
-		for ( const auto &pid : old_childs)
+
+	if ( logreader::find_processes(old_childs, "logread", "CHILD_OF=ipctrl")) {
+		for ( const auto &pid : old_childs) {
+
+			logger::debug << "found a previous orphan child process with pid " << pid << ", issuing a kill signal" << std::endl;
 			kill(pid, SIGKILL);
+		}
+	}
+
 }

@@ -211,7 +211,7 @@ const bool logreader::syslog::tail(void) {
 			return true;
 		}
 
-		logger::error "failed to begin syslog tailing" << std::endl;
+		logger::error << "failed to begin syslog tailing" << std::endl;
 
 		this -> mutex.unlock();
 		return false;

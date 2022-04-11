@@ -78,7 +78,7 @@ int main() {
 		syslog.mutex.unlock();
 
 		x++;
-		if ( x == 12 ) {
+		if ( x == 62 ) {
 			std::cout << "quit" << std::endl;
 			syslog.sig_exit(); // ask to abort
 		}

@@ -3,7 +3,7 @@ BINDIR:=$(TOPDIR)/bin
 
 CXX?=g++
 CXXFLAGS?=--std=c++17
-SUBDIRS:=shared logger logreader stdcapture nft
+SUBDIRS:=shared logger logreader stdcapture nft shellenv
 INCLUDES:=-I$(TOPDIR)/include $(addsuffix /include,$(addprefix -I$(TOPDIR)/,$(SUBDIRS)))
 LIBS:=
 
@@ -14,12 +14,17 @@ export OBJDIR BINDIR \
 
 COMMON_OBJS:= $(OBJDIR)/common.o
 
-ENVIRON_OBJS:= $(OBJDIR)/environ.o
-
 LOGGER_OBJS:= $(OBJDIR)/logger.o
 
 STDCAPTURE_OBJS:= \
 	$(OBJDIR)/stdcapture.o
+
+SHELLENV_OBJS:= \
+	$(OBJDIR)/env_member.o \
+	$(OBJDIR)/env_list.o \
+	$(OBJDIR)/env_list_iter.o \
+	$(OBJDIR)/env_getenv.o \
+	$(OBJDIR)/shell_exec.o
 
 LOGREADER_OBJS:= \
 	$(OBJDIR)/logreader_utils.o \
@@ -38,6 +43,7 @@ NFT_OBJS:= \
 
 EXAMPLE_OBJS:= \
 	$(OBJDIR)/stdcapture_main.o \
+	$(OBJDIR)/shellenv_main.o \
 	$(OBJDIR)/syslog_main.o \
 	$(OBJDIR)/logread_main.o \
 	$(OBJDIR)/logfile_main.o \
@@ -45,16 +51,17 @@ EXAMPLE_OBJS:= \
 
 EXAMPLES:= \
 	$(BINDIR)/stdcapture \
+	$(BINDIR)/shellenv \
 	$(BINDIR)/syslog \
 	$(BINDIR)/logread \
 	$(BINDIR)/logfile \
 	$(BINDIR)/nftset
 
 OBJS:= \
-	$(COMMON_OBJS) $(ENVIRON_OBJS) \
-	$(LOGGER_OBJS) $(STDCAPTURE_OBJS) \
+	$(COMMON_OBJS) $(LOGGER_OBJS) \
+	$(STDCAPTURE_OBJS) $(SHELLENV_OBJS) \
 	$(LOGREADER_OBJS) $(NFT_OBJS)
 
-export COMMON_OBJS ENVIRON_OBJS LOGGER_OBJS \
-	STDCAPTURE_OBJS LOGREADER_OBJS \
+export COMMON_OBJS LOGGER_OBJS STDCAPTURE_OBJS \
+	SHELLENV_OBJS LOGREADER_OBJS \
 	NFT_OBJS EXAMPLE_OBJS EXAMPLES OBJS

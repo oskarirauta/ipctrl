@@ -1,13 +1,16 @@
 stdcapture_deps := $(STDCAPTURE_OBJS) $(OBJDIR)/stdcapture_main.o
 stdcapture_libs :=
 
-syslog_deps := $(COMMON_OBJS) $(ENVIRON_OBJS) $(LOGGER_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/syslog_main.o
+shellenv_deps := $(SHELLENV_OBJS) $(OBJDIR)/shellenv_main.o
+shellenv_libs :=
+
+syslog_deps := $(COMMON_OBJS) $(SHELLENV_OBJS) $(LOGGER_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/syslog_main.o
 syslog_libs := -lubox -lblobmsg_json -lubus
 
-logread_deps := $(COMMON_OBJS) $(ENVIRON_OBJS) $(LOGGER_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/logread_main.o
+logread_deps := $(COMMON_OBJS) $(SHELLENV_OBJS) $(LOGGER_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/logread_main.o
 logread_libs := -lubox -lblobmsg_json -lubus
 
-logfile_deps := $(COMMON_OBJS) $(ENVIRON_OBJS) $(LOGGER_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/logfile_main.o
+logfile_deps := $(COMMON_OBJS) $(SHELLENV_OBJS) $(LOGGER_OBJS) $(LOGREADER_OBJS) $(OBJDIR)/logfile_main.o
 logfile_libs := -lubox -lblobmsg_json -lubus
 
 nftset_deps := $(COMMON_OBJS) $(STDCAPTURE_OBJS) $(NFT_OBJS) $(OBJDIR)/nftset_main.o

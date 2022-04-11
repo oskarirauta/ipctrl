@@ -7,7 +7,8 @@
 #include <sys/wait.h>
 
 #include "common.hpp"
-#include "environ.hpp"
+#include "env/env.hpp"
+#include "shell/exec.hpp"
 #include "logger.hpp"
 #include "logreader/utils.hpp"
 #include "logreader/logread.hpp"
@@ -216,15 +217,10 @@ bool logreader::logread::spawn_child(void) {
 
 	} else {
 
-		std::string shell_env = env::get();
-		env::add(shell_env, "CHILD_OF", "ipctrl");
-		const char *ch_env[env::new_size(shell_env)];
-		env::mk_env(ch_env, shell_env);
-
 		close(this -> pipefd[0]);
 		dup2(this -> pipefd[1], STDOUT_FILENO);
 		dup2(this -> pipefd[1], STDERR_FILENO);
-		execle("/sbin/logread", "/sbin/logread", "-f", (char *)NULL, ch_env);
+		shell::exec("/sbin/logread", "-f", env::getenv() + env::member("CHILD_OF", "ipctrl"));
 		exit(EXIT_FAILURE);
 	}
 

@@ -6,7 +6,6 @@
 #include <sys/wait.h>
 
 #include "common.hpp"
-#include "environ.hpp"
 #include "logger.hpp"
 #include "logreader/utils.hpp"
 #include "logreader/file.hpp"

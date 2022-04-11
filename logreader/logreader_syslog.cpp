@@ -90,9 +90,9 @@ static void parse_logdata(struct blob_attr *msg) {
 		getcodetext(LOG_FAC(p) << 3, facilitynames) << "." <<
 		getcodetext(LOG_PRI(p), prioritynames) <<
 		( blobmsg_get_u32(tb[LOG_SOURCE]) ? "" : " kernel:" ) << " " <<
-		m;
+		m; // Simulate message to same form as it would be shown through logread
 
-	if ( id > 948 )
+	if ( id > prev_id )
 		new_entries.push_back(ss.str());
 }
 
@@ -140,7 +140,7 @@ static void _get_logdata(std::string ubus_socket, bool &result) {
 
 	if ( ctx = ubus_connect(ubus_socket.empty() ? NULL : ubus_socket.c_str()); !ctx ) {
 
-		std::cerr << "Failed to connect to ubus socket " << ubus_socket << std::endl;
+		logger::error << "Failed to connect to ubus socket " << ubus_socket << std::endl;
 		result = false;
 		return;
 	}
@@ -159,7 +159,7 @@ static void _get_logdata(std::string ubus_socket, bool &result) {
 
 		if ( int res = ubus_lookup_id(ctx, "log", &id); res ) {
 
-			std::cerr << "Failed to find log object: " <<
+			logger::error << "Failed to find log object: " <<
 				ubus_strerror(res) << std::endl;
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 			continue;
@@ -192,19 +192,13 @@ const bool logreader::syslog::tail(void) {
 
 	this -> mutex.lock();
 
-	if ( !this -> _running && !this -> _aborted ) {
-
-		std::cout << "not running.." << std::endl;
+	if ( !this -> _running ) {
 
 		if ( this -> _aborted ) { // Do not tail, we have been aborted
-
-			std::cout << "because aborted.." << std::endl;
 
 			this -> mutex.unlock();
 			return false;
 		}
-
-		std::cout << "getting last id.." << std::endl;
 
 		get_last_id_only = true;
 		if ( get_logdata(this -> _ubus_socket)) {
@@ -213,11 +207,11 @@ const bool logreader::syslog::tail(void) {
 			this -> _running = true;
 			this -> mutex.unlock();
 
-			std::cout << "last entry's id: #" << this -> _last_id << std::endl;
+			logger::vverbose << "syslog tailing begun, ast entry in syslog is #" << this -> _last_id << std::endl;
 			return true;
 		}
 
-		std::cout << "and failed with it.." << std::endl;
+		logger::error "failed to begin syslog tailing" << std::endl;
 
 		this -> mutex.unlock();
 		return false;

@@ -1,4 +1,4 @@
-#include <iostream>
+#include <sstream>
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
@@ -6,8 +6,6 @@
 #include <unistd.h>
 #include <poll.h>
 #include <sys/wait.h>
-
-#include <sstream>
 
 extern "C" {
 #define SYSLOG_NAMES
@@ -19,7 +17,7 @@ extern "C" {
 }
 
 #include "common.hpp"
-#include "environ.hpp"
+#include "logger.hpp"
 #include "logreader/utils.hpp"
 #include "logreader/syslog.hpp"
 
@@ -73,9 +71,9 @@ static void parse_logdata(struct blob_attr *msg) {
 
 		retrieved_last_id = id;
 		return;
-	} else if ( id < retrieved_last_id && prev_id > id && prev_id != 0 ) {
-		// TODO: add log entry about log entry id's restarting from 0..
-	} else if ( id <= retrieved_last_id ) // We already processed this entry..
+	} else if ( id < retrieved_last_id && prev_id > id && prev_id != 0 )
+		logger::debug << "log entry id's in syslog restarted from 0 again" << std::endl;
+	else if ( id <= retrieved_last_id ) // We already processed this entry..
 		return;
 
 	prev_id = retrieved_last_id;
@@ -121,7 +119,6 @@ static void get_logdata_fd_data_cb(struct ustream *s, int bytes) {
 
 static void get_logdata_fd_state_cb(struct ustream *s) {
 
-	//logd_conn_tries = logd_conn_retries;
 	uloop_end();
 }
 
@@ -164,8 +161,7 @@ static void _get_logdata(std::string ubus_socket, bool &result) {
 
 			std::cerr << "Failed to find log object: " <<
 				ubus_strerror(res) << std::endl;
-			// TODO: use chronos
-			sleep(1);
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 			continue;
 		}
 
@@ -196,7 +192,7 @@ const bool logreader::syslog::tail(void) {
 
 	this -> mutex.lock();
 
-	if ( !this -> _running ) {
+	if ( !this -> _running && !this -> _aborted ) {
 
 		std::cout << "not running.." << std::endl;
 
@@ -228,12 +224,13 @@ const bool logreader::syslog::tail(void) {
 	} else if ( this -> _aborted && this -> _running ) {
 
 		this -> _running = false;
-		this -> _exiting = false;
+		this -> entries.clear();
 		this -> mutex.unlock();
 		return false;
-	} else if ( this -> _aborted && this -> _running ) {
 
-		this -> _exiting = false;
+	} else if ( this -> _aborted ) {
+
+		this -> _running = false;
 		this -> mutex.unlock();
 		return false;
 	}
@@ -269,41 +266,6 @@ const bool logreader::syslog::tail(void) {
 	return true;
 }
 
-void logreader::syslog::panic(void) {
-/*
-	// TODO:
-	// try locking several times for some time, for example- 5ms
-
-	bool locked = this -> mutex.try_lock(); // Do not force mutex, this is panic
-	pid_t ch_pid = this -> _pid;
-	this -> _aborted = true;
-	this -> entries.clear();
-
-	if ( locked ) // unlock if mutex lock was possible
-		this -> mutex.unlock();
-
-	if ( ch_pid > 0 )
-		kill(ch_pid, SIGKILL);
-*/
-}
-
-/*
-static void stop_uloop(void) {
-	uloop_end();
-}
-*/
-
-void logreader::syslog::sig_exit(void) {
-	std::lock_guard<std::mutex> lock(this -> mutex);
-	this -> _aborted = true;
-	//end_tailing = true;
-	//stop_uloop();
-	//std::cout << "joining syslog pth" << std::endl;
-	//this -> _syslog_pth.join();
-	std::cout << "sig_exit" << std::endl;
-}
-
-
 // logread::syslog must be a singleton only
 static bool syslog_initialized = false;
 
@@ -316,5 +278,6 @@ logreader::syslog::syslog(std::string ubus_socket) {
 
 	this -> _ubus_socket = ubus_socket;
 	this -> _last_id = 0;
-
+	this -> _running = false;
+	this -> _aborted = false;
 }

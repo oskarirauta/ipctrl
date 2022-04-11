@@ -1,21 +1,14 @@
 #pragma once
 
-#include <thread>
-#include <cstdio>
-
-#include "logreader/base_class.hpp"
-
-#include <iostream>
-
-#include <list>
 #include <string>
-#include <mutex>
 #include <thread>
 
 extern "C" {
 #include <libubox/blobmsg_json.h>
 #include "libubus.h"
 }
+
+#include "logreader/base_class.hpp"
 
 namespace logreader {
 
@@ -43,8 +36,7 @@ namespace logreader {
 			}
 
 			const inline bool exiting(void) {
-				std::lock_guard<std::mutex> lock(this -> mutex);
-				return this -> _exiting;
+				return false;
 			}
 
 			const inline bool aborted(void) {
@@ -59,24 +51,41 @@ namespace logreader {
 				this -> _delay = millis;
 			}
 
-			void sig_exit(void);
+			void sig_exit(void) {
+				std::lock_guard<std::mutex> lock(this -> mutex);
+				this -> _aborted = true;
+			}
 
 			inline bool reset(void) {
-/*
+
 				std::lock_guard<std::mutex> lock(this -> mutex);
-				if ( this -> _running || this -> _exiting || this -> _pid > 0 )
+				if ( this -> _running || !this -> _aborted )
 					return false;
 
-				fclose(this -> _output);
-				this -> _pid = 0;
+				this -> entries.clear();
 				this -> _running = false;
-				this -> _exiting = false;
 				this -> _aborted = false;
-*/
 				return true;
 			}
 
-			void panic(void);
+			void panic(void) {
+
+				bool locked = false;
+
+				for ( int i = 0; i < 10 && !locked; i++ ) { // attempto to lock several times
+
+					locked = this -> mutex.try_lock(); // but we don't force, this is panic after all..
+					if ( i != 0 && !locked )
+
+						std::this_thread::sleep_for(std::chrono::milliseconds(4));
+				}
+
+				this -> _aborted = true;
+				this -> entries.clear();
+
+				if ( locked ) // unlock if mutex lock was possible
+					this -> mutex.unlock();
+			}
 
 			syslog(std::string ubus_socket = "");
 
